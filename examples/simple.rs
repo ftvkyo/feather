@@ -1,6 +1,9 @@
-use feather::add;
+use feather::{App, make_sphere};
 
 
 fn main() {
-    println!("1 + 2 = {}", add(1, 2));
+    let app = App::new("Simple");
+
+    let sphere = make_sphere(2);
+    app.run(sphere);
 }
