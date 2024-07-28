@@ -4,5 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+clap = { version = "4.5.11", features = ["derive"] }
 hexasphere = "14.0.0"
+stl_io = "0.7.0"
 three-d = "0.17.0"
