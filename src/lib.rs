@@ -40,7 +40,7 @@ impl App {
         );
 
         let context = self.window.gl();
-        let model = Gm::new(Mesh::new(&context, &cpu_mesh), ColorMaterial::default());
+        let model = Gm::new(Mesh::new(&context, &cpu_mesh), NormalMaterial::default());
 
         self.window.render_loop(move |mut frame_input| {
             camera.set_viewport(frame_input.viewport);
@@ -64,10 +64,14 @@ pub fn make_sphere(subdivisions: usize) -> CpuMesh {
     let indices = Indices::U32(sphere.get_all_indices());
     let colors = Some((0..positions.len()).map(|_| Srgba::new(255, 0, 0, 255)).collect());
 
-    CpuMesh {
+    let mut mesh = CpuMesh {
         positions,
         indices,
         colors,
         ..Default::default()
-    }
+    };
+
+    mesh.compute_normals();
+
+    return mesh;
 }
