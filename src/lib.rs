@@ -43,15 +43,21 @@ impl App {
         let model = Gm::new(Mesh::new(&context, &cpu_mesh), NormalMaterial::default());
 
         self.window.render_loop(move |mut frame_input| {
-            camera.set_viewport(frame_input.viewport);
-            control.handle_events(&mut camera, &mut frame_input.events);
+            let mut redraw = frame_input.first_frame;
+            redraw |= camera.set_viewport(frame_input.viewport);
+            redraw |= control.handle_events(&mut camera, &mut frame_input.events);
 
-            frame_input
-                .screen()
-                .clear(ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0))
-                .render(&camera, &model, &[]);
+            if redraw {
+                frame_input
+                    .screen()
+                    .clear(ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0))
+                    .render(&camera, &model, &[]);
+            }
 
-            FrameOutput::default()
+            FrameOutput {
+                swap_buffers: redraw,
+                ..Default::default()
+            }
         });
     }
 }
