@@ -1,10 +1,8 @@
 use std::fs::OpenOptions;
 
 use clap::{Parser, ValueEnum};
-use stl_io::IndexedMesh;
 
-use crate::{produce_stl, view::View};
-
+use crate::{file::produce_stl, view::View, Shape};
 
 #[derive(ValueEnum, Clone, Debug)]
 enum AppMode {
@@ -18,7 +16,6 @@ impl Default for AppMode {
     }
 }
 
-
 #[derive(Parser, Debug)]
 #[command()]
 struct AppArgs {
@@ -26,12 +23,10 @@ struct AppArgs {
     mode: AppMode,
 }
 
-
 pub struct App {
     args: AppArgs,
     title: String,
 }
-
 
 impl App {
     pub fn new<S: ToString>(title: S) -> Self {
@@ -41,12 +36,12 @@ impl App {
         }
     }
 
-    pub fn run(self, mesh: IndexedMesh) {
+    pub fn run(self, shape: impl Shape) {
         match self.args.mode {
             AppMode::View => {
                 let view = View::new(self.title);
-                view.run(mesh);
-            },
+                view.run(shape.mesh_render());
+            }
             AppMode::Output => {
                 let output_dir = "out/";
                 let output_path = format!("{}/{}.stl", output_dir, self.title);
@@ -60,9 +55,9 @@ impl App {
                     .open(output_path)
                     .unwrap();
 
-                stl_io::write_stl(&mut file, produce_stl(mesh).iter()).unwrap();
-            },
+                let stl = produce_stl(shape.mesh());
+                stl_io::write_stl(&mut file, stl.iter()).unwrap();
+            }
         }
-
     }
 }

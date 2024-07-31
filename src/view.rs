@@ -1,7 +1,4 @@
-use stl_io::IndexedMesh;
 use three_d::*;
-
-use crate::make_cpu_mesh;
 
 struct ViewState {
     pub render_wireframe: bool,
@@ -20,8 +17,8 @@ impl ViewState {
                     self.render_wireframe = !self.render_wireframe;
                     *handled = true;
                     change = true;
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
         change
@@ -36,19 +33,18 @@ impl Default for ViewState {
     }
 }
 
-
 pub struct View {
     window: Window,
     state: ViewState,
 }
-
 
 impl View {
     pub fn new<S: ToString>(title: S) -> Self {
         let window = Window::new(WindowSettings {
             title: title.to_string(),
             ..Default::default()
-        }).unwrap();
+        })
+        .unwrap();
 
         Self {
             window,
@@ -56,9 +52,7 @@ impl View {
         }
     }
 
-    pub fn run(self, mesh: IndexedMesh) {
-        let cpu_mesh = make_cpu_mesh(mesh);
-
+    pub fn run(self, mesh: CpuMesh) {
         let camera_distance = 3.0;
         let camera_target = vec3(0.0, 0.0, 0.0);
         let camera_up = vec3(0.0, 1.0, 0.0);
@@ -72,11 +66,7 @@ impl View {
             0.1,
             10.0,
         );
-        let mut control = OrbitControl::new(
-            camera_target,
-            1.0,
-            10.0,
-        );
+        let mut control = OrbitControl::new(camera_target, 1.0, 10.0);
 
         let context = self.window.gl();
 
@@ -88,20 +78,18 @@ impl View {
             },
         );
         model_material.render_states.cull = Cull::Back;
-        let model = Gm::new(Mesh::new(&context, &cpu_mesh), model_material);
+        let model = Gm::new(Mesh::new(&context, &mesh), model_material);
 
-        let (edges, vertices) = crate::wireframe::generate_wireframe(&context, &cpu_mesh);
+        let (edges, vertices) = crate::wireframe::generate_wireframe(&context, &mesh);
 
         let clear = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0);
 
         let ambient = AmbientLight::new(&context, 0.7, Srgba::WHITE);
-        let directional0 = DirectionalLight::new(&context, 2.0, Srgba::WHITE, &vec3(-1.0, -1.0, -1.0));
+        let directional0 =
+            DirectionalLight::new(&context, 2.0, Srgba::WHITE, &vec3(-1.0, -1.0, -1.0));
         let directional1 = DirectionalLight::new(&context, 2.0, Srgba::WHITE, &vec3(1.0, 1.0, 1.0));
 
-        let View {
-            window,
-            mut state,
-        } = self;
+        let View { window, mut state } = self;
 
         window.render_loop(move |mut frame_input| {
             let mut redraw = frame_input.first_frame;
@@ -111,15 +99,17 @@ impl View {
 
             if redraw {
                 if !state.render_wireframe {
-                    frame_input
-                        .screen()
-                        .clear(clear)
-                        .render(&camera, &model, &[&ambient, &directional0, &directional1]);
+                    frame_input.screen().clear(clear).render(
+                        &camera,
+                        &model,
+                        &[&ambient, &directional0, &directional1],
+                    );
                 } else {
-                    frame_input
-                        .screen()
-                        .clear(clear)
-                        .render(&camera, model.into_iter().chain(&edges).chain(&vertices), &[&ambient, &directional0, &directional1]);
+                    frame_input.screen().clear(clear).render(
+                        &camera,
+                        model.into_iter().chain(&edges).chain(&vertices),
+                        &[&ambient, &directional0, &directional1],
+                    );
                 }
             }
 

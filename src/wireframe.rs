@@ -1,12 +1,9 @@
 // This file contains code from the `three-d` library examples licensed under MIT.
 // Source: https://github.com/asny/three-d/blob/a69b70874d93da231f5e4f8c35adb4d38134aeee/examples/wireframe/src/main.rs
 
-
 use three_d::*;
 
-
 type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
-
 
 pub fn generate_wireframe(context: &Context, cpu_mesh: &CpuMesh) -> (Wireframe, Wireframe) {
     let mut wireframe_material = PhysicalMaterial::new_opaque(
@@ -39,7 +36,6 @@ pub fn generate_wireframe(context: &Context, cpu_mesh: &CpuMesh) -> (Wireframe, 
     (edges, vertices)
 }
 
-
 fn edge_transformations(cpu_mesh: &CpuMesh) -> Instances {
     let indices = cpu_mesh.indices.to_u32().unwrap();
     let positions = cpu_mesh.positions.to_f32();
@@ -65,7 +61,6 @@ fn edge_transformations(cpu_mesh: &CpuMesh) -> Instances {
     }
 }
 
-
 fn edge_transform(p1: Vec3, p2: Vec3) -> Mat4 {
     Mat4::from_translation(p1)
         * Into::<Mat4>::into(Quat::from_arc(
@@ -75,7 +70,6 @@ fn edge_transform(p1: Vec3, p2: Vec3) -> Mat4 {
         ))
         * Mat4::from_nonuniform_scale((p1 - p2).magnitude(), 1.0, 1.0)
 }
-
 
 fn vertex_transformations(cpu_mesh: &CpuMesh) -> Instances {
     Instances {
