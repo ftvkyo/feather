@@ -53,13 +53,22 @@ impl View {
     }
 
     pub fn run(self, mesh: CpuMesh) {
+        let clear_state = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0);
+
         let camera_distance = 3.0;
+        let camera_position = vec3(camera_distance, 0.0, 0.0);
         let camera_target = vec3(0.0, 0.0, 0.0);
         let camera_up = vec3(0.0, 1.0, 0.0);
 
+        /* ============= *
+         * Context setup *
+         * ============= */
+
+        let context = self.window.gl();
+
         let mut camera = Camera::new_perspective(
             self.window.viewport(),
-            vec3(camera_distance, 0.0, 0.0),
+            camera_position,
             camera_target,
             camera_up,
             degrees(60.0),
@@ -68,7 +77,8 @@ impl View {
         );
         let mut control = OrbitControl::new(camera_target, 1.0, 10.0);
 
-        let context = self.window.gl();
+        let light_ambient = AmbientLight::new(&context, 0.7, Srgba::WHITE);
+        let mut light_camera = DirectionalLight::new(&context, 2.0, Srgba::WHITE, &(camera_target - camera_position));
 
         let mut model_material = PhysicalMaterial::new_opaque(
             &context,
@@ -82,12 +92,9 @@ impl View {
 
         let (edges, vertices) = crate::wireframe::generate_wireframe(&context, &mesh);
 
-        let clear = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0);
-
-        let ambient = AmbientLight::new(&context, 0.7, Srgba::WHITE);
-        let directional0 =
-            DirectionalLight::new(&context, 2.0, Srgba::WHITE, &vec3(-1.0, -1.0, -1.0));
-        let directional1 = DirectionalLight::new(&context, 2.0, Srgba::WHITE, &vec3(1.0, 1.0, 1.0));
+        /* ========= *
+         * Rendering *
+         * ========= */
 
         let View { window, mut state } = self;
 
@@ -98,17 +105,19 @@ impl View {
             redraw |= state.handle_events(&mut frame_input.events);
 
             if redraw {
+                light_camera.direction = camera_target - camera.position();
+
                 if !state.render_wireframe {
-                    frame_input.screen().clear(clear).render(
+                    frame_input.screen().clear(clear_state).render(
                         &camera,
                         &model,
-                        &[&ambient, &directional0, &directional1],
+                        &[&light_ambient, &light_camera],
                     );
                 } else {
-                    frame_input.screen().clear(clear).render(
+                    frame_input.screen().clear(clear_state).render(
                         &camera,
                         model.into_iter().chain(&edges).chain(&vertices),
-                        &[&ambient, &directional0, &directional1],
+                        &[&light_ambient, &light_camera],
                     );
                 }
             }
