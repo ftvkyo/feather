@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 byteorder = "1.5.0"
+cgmath = "0.18.0"
 clap = { version = "4.5.11", features = ["derive"] }
+geo = { version = "0.28.0", features = ["spade"], default-features = false }
 hexasphere = "14.0.0"
 three-d = "0.17.0"

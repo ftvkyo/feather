@@ -2,7 +2,7 @@ use std::fs::OpenOptions;
 
 use clap::{Parser, ValueEnum};
 
-use crate::{view::View, Mesh3D};
+use crate::{view::View, Polyhedron};
 
 #[derive(ValueEnum, Clone, Debug)]
 enum AppMode {
@@ -36,7 +36,7 @@ impl App {
         }
     }
 
-    pub fn run(self, mesh: Mesh3D) {
+    pub fn run(self, mesh: Polyhedron) {
         match self.args.mode {
             AppMode::View => {
                 let view = View::new(self.title);

@@ -1,8 +1,8 @@
-use feather::{App, Mesh3D};
+use feather::{App, Polyhedron};
 
 fn main() {
     let app = App::new("Sphere");
 
-    let sphere = Mesh3D::sphere(1);
+    let sphere = Polyhedron::sphere(1);
     app.run(sphere);
 }
