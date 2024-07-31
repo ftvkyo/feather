@@ -1,5 +1,4 @@
 mod app;
-mod file;
 mod shape;
 mod view;
 mod wireframe;

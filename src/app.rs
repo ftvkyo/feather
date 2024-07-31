@@ -2,7 +2,7 @@ use std::fs::OpenOptions;
 
 use clap::{Parser, ValueEnum};
 
-use crate::{file::produce_stl, view::View, Shape};
+use crate::{view::View, Mesh3D};
 
 #[derive(ValueEnum, Clone, Debug)]
 enum AppMode {
@@ -36,11 +36,11 @@ impl App {
         }
     }
 
-    pub fn run(self, shape: impl Shape) {
+    pub fn run(self, mesh: Mesh3D) {
         match self.args.mode {
             AppMode::View => {
                 let view = View::new(self.title);
-                view.run(shape.mesh_render());
+                view.run(mesh.into());
             }
             AppMode::Output => {
                 let output_dir = "out/";
@@ -55,8 +55,7 @@ impl App {
                     .open(output_path)
                     .unwrap();
 
-                let stl = produce_stl(shape.mesh());
-                stl_io::write_stl(&mut file, stl.iter()).unwrap();
+                mesh.stl(&mut file).unwrap();
             }
         }
     }
