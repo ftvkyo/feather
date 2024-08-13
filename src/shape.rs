@@ -190,9 +190,17 @@ impl Geometry3D {
 
 impl Into<CpuMesh> for Geometry3D {
     fn into(self) -> CpuMesh {
+        // `positions` and `indices` could just be copied, however,
+        // the three-d crate doesn't support flat rendering.
+        // So, to achieve flat rendering, there is no index buffer used.
+
+        let positions = self.indices
+            .iter()
+            .map(|&i| self.positions[i as usize])
+            .collect();
+
         let mut mesh = CpuMesh {
-            positions: Positions::F64(self.positions),
-            indices: Indices::U32(self.indices),
+            positions: Positions::F64(positions),
             ..Default::default()
         };
 
