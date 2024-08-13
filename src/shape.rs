@@ -11,11 +11,11 @@ type V2D = Vector2<F>;
 type P3D = Point3<F>;
 type V3D = Vector3<F>;
 
-pub struct Polygon {
+pub struct Geometry2D {
     inner: geo::Polygon,
 }
 
-impl Polygon {
+impl Geometry2D {
     pub fn circle(sides: usize) -> Self {
         assert!(sides >= 3, "Sides ({sides}) should be >= 3");
 
@@ -40,8 +40,8 @@ impl Polygon {
     }
 }
 
-impl Polygon {
-    pub fn extrude_linear(&self, extent: F) -> Polyhedron {
+impl Geometry2D {
+    pub fn extrude_linear(&self, extent: F) -> Geometry3D {
         let extent = extent / 2.0; // Go half down and half up (like `center = true` in OpenSCAD)
         let triangulation = self.inner.constrained_triangulation(Default::default()).unwrap();
 
@@ -110,19 +110,19 @@ impl Polygon {
             unimplemented!("Extrusion of polygons with interior rings");
         }
 
-        Polyhedron {
+        Geometry3D {
             positions,
             indices,
         }
     }
 }
 
-pub struct Polyhedron {
+pub struct Geometry3D {
     positions: Vec<V3D>,
     indices: Vec<u32>,
 }
 
-impl Polyhedron {
+impl Geometry3D {
     pub fn sphere(subdivisions: usize) -> Self {
         let subdivided = hexasphere::shapes::IcoSphere::new(subdivisions, |_| ());
 
@@ -147,7 +147,7 @@ impl Polyhedron {
     }
 }
 
-impl Polyhedron {
+impl Geometry3D {
     pub fn stl<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
         let mut writer = BufWriter::new(writer);
 
@@ -188,7 +188,7 @@ impl Polyhedron {
     }
 }
 
-impl Into<CpuMesh> for Polyhedron {
+impl Into<CpuMesh> for Geometry3D {
     fn into(self) -> CpuMesh {
         let mut mesh = CpuMesh {
             positions: Positions::F64(self.positions),
