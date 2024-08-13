@@ -77,13 +77,15 @@ impl View {
         );
         let mut control = OrbitControl::new(camera_target, 1.0, 10.0);
 
-        let light_ambient = AmbientLight::new(&context, 0.7, Srgba::WHITE);
-        let mut light_camera = DirectionalLight::new(&context, 2.0, Srgba::WHITE, &(camera_target - camera_position));
+        let light_ambient = AmbientLight::new(&context, 0.01, Srgba::WHITE);
+        let mut light_camera = DirectionalLight::new(&context, 0.5, Srgba::WHITE, &(camera_target - camera_position));
 
         let mut model_material = PhysicalMaterial::new_opaque(
             &context,
             &CpuMaterial {
-                albedo: Srgba::new_opaque(50, 50, 50),
+                albedo: Srgba::new_opaque(255, 255, 255),
+                metallic: 0.25,
+                roughness: 0.25,
                 ..Default::default()
             },
         );
