@@ -118,8 +118,8 @@ impl Geometry2D {
 }
 
 pub struct Geometry3D {
-    positions: Vec<V3D>,
-    indices: Vec<u32>,
+    pub positions: Vec<V3D>,
+    pub indices: Vec<u32>,
 }
 
 impl Geometry3D {

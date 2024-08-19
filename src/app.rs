@@ -36,11 +36,11 @@ impl App {
         }
     }
 
-    pub fn run(self, mesh: Geometry3D) {
+    pub fn run(self, geometry: Geometry3D) {
         match self.args.mode {
             AppMode::View => {
                 let view = View::new(self.title);
-                view.run(mesh.into());
+                view.run(geometry);
             }
             AppMode::Output => {
                 let output_dir = "out/";
@@ -55,7 +55,7 @@ impl App {
                     .open(output_path)
                     .unwrap();
 
-                mesh.stl(&mut file).unwrap();
+                geometry.stl(&mut file).unwrap();
             }
         }
     }

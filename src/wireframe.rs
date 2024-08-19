@@ -3,9 +3,11 @@
 
 use three_d::*;
 
-type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
+use crate::Geometry3D;
 
-pub fn generate_wireframe(context: &Context, cpu_mesh: &CpuMesh) -> (Wireframe, Wireframe) {
+pub type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
+
+pub fn generate_wireframe(context: &Context, geometry: &Geometry3D) -> (Wireframe, Wireframe) {
     let mut wireframe_material = PhysicalMaterial::new_opaque(
         &context,
         &CpuMaterial {
@@ -22,48 +24,39 @@ pub fn generate_wireframe(context: &Context, cpu_mesh: &CpuMesh) -> (Wireframe, 
         .transform(&Mat4::from_nonuniform_scale(1.0, scale, scale))
         .unwrap();
     let edges = Gm::new(
-        InstancedMesh::new(&context, &edge_transformations(&cpu_mesh), &cylinder),
+        InstancedMesh::new(&context, &edge_transformations(&geometry), &cylinder),
         wireframe_material.clone(),
     );
 
     let mut sphere = CpuMesh::sphere(8);
     sphere.transform(&Mat4::from_scale(scale)).unwrap();
     let vertices = Gm::new(
-        InstancedMesh::new(&context, &vertex_transformations(&cpu_mesh), &sphere),
+        InstancedMesh::new(&context, &vertex_transformations(&geometry), &sphere),
         wireframe_material,
     );
 
     (edges, vertices)
 }
 
-fn edge_transformations(cpu_mesh: &CpuMesh) -> Instances {
-    let positions = cpu_mesh.positions.to_f32();
+fn edge_transformations(geometry: &Geometry3D) -> Instances {
+    let positions = &geometry.positions;
+    let indices = &geometry.indices;
 
     let mut transformations = Vec::new();
 
-    if let Some(indices) = cpu_mesh.indices.to_u32() {
-        for f in 0..indices.len() / 3 {
-            let i1 = indices[3 * f] as usize;
-            let i2 = indices[3 * f + 1] as usize;
-            let i3 = indices[3 * f + 2] as usize;
+    for f in 0..indices.len() / 3 {
+        let i1 = indices[3 * f] as usize;
+        let i2 = indices[3 * f + 1] as usize;
+        let i3 = indices[3 * f + 2] as usize;
 
-            if i1 < i2 {
-                transformations.push(edge_transform(positions[i1], positions[i2]));
-            }
-            if i2 < i3 {
-                transformations.push(edge_transform(positions[i2], positions[i3]));
-            }
-            if i3 < i1 {
-                transformations.push(edge_transform(positions[i3], positions[i1]));
-            }
+        if i1 < i2 {
+            transformations.push(edge_transform(positions[i1], positions[i2]));
         }
-    } else {
-        for t in positions.chunks(3) {
-            // NOTE: This will lead to duplicate entries.
-            // Ideally, wireframe should be generated from [`Geometry3D`].
-            transformations.push(edge_transform(t[0], t[1]));
-            transformations.push(edge_transform(t[1], t[2]));
-            transformations.push(edge_transform(t[2], t[0]));
+        if i2 < i3 {
+            transformations.push(edge_transform(positions[i2], positions[i3]));
+        }
+        if i3 < i1 {
+            transformations.push(edge_transform(positions[i3], positions[i1]));
         }
     }
 
@@ -73,7 +66,10 @@ fn edge_transformations(cpu_mesh: &CpuMesh) -> Instances {
     }
 }
 
-fn edge_transform(p1: Vec3, p2: Vec3) -> Mat4 {
+fn edge_transform(p1: Vector3<f64>, p2: Vector3<f64>) -> Mat4 {
+    let p1 = p1.cast().unwrap();
+    let p2 = p2.cast().unwrap();
+
     Mat4::from_translation(p1)
         * Into::<Mat4>::into(Quat::from_arc(
             vec3(1.0, 0.0, 0.0),
@@ -83,13 +79,13 @@ fn edge_transform(p1: Vec3, p2: Vec3) -> Mat4 {
         * Mat4::from_nonuniform_scale((p1 - p2).magnitude(), 1.0, 1.0)
 }
 
-fn vertex_transformations(cpu_mesh: &CpuMesh) -> Instances {
+fn vertex_transformations(geometry: &Geometry3D) -> Instances {
     Instances {
-        transformations: cpu_mesh
+        transformations: geometry
             .positions
-            .to_f32()
-            .into_iter()
-            .map(Mat4::from_translation)
+            .iter()
+            .map(|v| v.cast::<f32>().unwrap())
+            .map(Matrix4::from_translation)
             .collect(),
         ..Default::default()
     }

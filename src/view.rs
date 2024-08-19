@@ -1,5 +1,7 @@
 use three_d::*;
 
+use crate::Geometry3D;
+
 struct ViewState {
     pub render_wireframe: bool,
 }
@@ -52,7 +54,7 @@ impl View {
         }
     }
 
-    pub fn run(self, mesh: CpuMesh) {
+    pub fn run(self, geometry: Geometry3D) {
         let clear_state = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0);
 
         let camera_distance = 3.0;
@@ -90,9 +92,10 @@ impl View {
             },
         );
         model_material.render_states.cull = Cull::Back;
-        let model = Gm::new(Mesh::new(&context, &mesh), model_material);
 
-        let (edges, vertices) = crate::wireframe::generate_wireframe(&context, &mesh);
+        let (edges, vertices) = crate::wireframe::generate_wireframe(&context, &geometry);
+        let model = Gm::new(Mesh::new(&context, &geometry.into()), model_material);
+
 
         /* ========= *
          * Rendering *
