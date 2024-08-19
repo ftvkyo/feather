@@ -1,11 +1,11 @@
-use std::fs::OpenOptions;
+use std::{fs::OpenOptions, path::PathBuf};
 
 use clap::{Parser, ValueEnum};
 
 use crate::{view::View, Geometry3D};
 
 #[derive(ValueEnum, Clone, Debug)]
-enum AppMode {
+pub enum AppMode {
     View,
     Output,
 }
@@ -18,28 +18,31 @@ impl Default for AppMode {
 
 #[derive(Parser, Debug)]
 #[command()]
-struct AppArgs {
+pub struct AppArgs {
     #[arg(short, long, value_enum, default_value_t)]
-    mode: AppMode,
+    pub mode: AppMode,
+    pub file: PathBuf,
 }
 
 pub struct App {
-    args: AppArgs,
+    pub args: AppArgs,
     title: String,
 }
 
 impl App {
     pub fn new<S: ToString>(title: S) -> Self {
+        let args = AppArgs::parse();
+
         Self {
-            args: AppArgs::parse(),
-            title: title.to_string(),
+            title: format!("{} - {:?}", title.to_string(), args.file),
+            args,
         }
     }
 
-    pub fn run(self, geometry: Geometry3D) {
+    pub fn run(&self, geometry: Geometry3D) {
         match self.args.mode {
             AppMode::View => {
-                let view = View::new(self.title);
+                let view = View::new(&self.title);
                 view.run(geometry);
             }
             AppMode::Output => {

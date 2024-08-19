@@ -3,7 +3,7 @@ use std::io::{BufWriter, Write};
 use byteorder::{LittleEndian, WriteBytesExt};
 use cgmath::{prelude::*, vec2, Basis2, Point2, Point3, Rad, Vector2, Vector3};
 use geo::TriangulateSpade;
-use three_d::{CpuMesh, Indices, Positions};
+use three_d::{CpuMesh, Positions};
 
 type F = f64;
 type P2D = Point2<F>;
@@ -11,6 +11,7 @@ type V2D = Vector2<F>;
 type P3D = Point3<F>;
 type V3D = Vector3<F>;
 
+#[derive(Clone, Debug)]
 pub struct Geometry2D {
     inner: geo::Polygon,
 }
@@ -117,6 +118,8 @@ impl Geometry2D {
     }
 }
 
+
+#[derive(Clone, Debug)]
 pub struct Geometry3D {
     pub positions: Vec<V3D>,
     pub indices: Vec<u32>,
