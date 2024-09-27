@@ -1,4 +1,4 @@
-use feather::*;
+use feather::prelude::*;
 use mlua::Result;
 
 

@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use mlua::prelude::*;
 
-use crate::*;
+use crate::prelude::*;
 
 
 enum Geometry {
