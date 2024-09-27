@@ -1,6 +1,27 @@
 use three_d::*;
 
-use crate::Geometry3D;
+use crate::geometry::{AsPrimitives, Geometry3D};
+
+use super::wireframe::generate_wireframe;
+
+impl Into<CpuMesh> for Geometry3D {
+    fn into(self) -> CpuMesh {
+        // `vertices` and `triangles` could just be copied, however, the three-d crate doesn't support flat rendering.
+        // So, to achieve flat rendering, there is no index buffer used.
+
+        let vertices = self.as_vertices();
+        let vertices = vertices.into_iter().map(Point3::to_vec).collect();
+
+        let mut mesh = CpuMesh {
+            positions: Positions::F64(vertices),
+            ..Default::default()
+        };
+
+        mesh.compute_normals();
+
+        mesh
+    }
+}
 
 struct ViewState {
     pub render_wireframe: bool,
@@ -93,7 +114,7 @@ impl View {
         );
         model_material.render_states.cull = Cull::Back;
 
-        let (edges, vertices) = crate::wireframe::generate_wireframe(&context, &geometry);
+        let (edges, vertices) = generate_wireframe(&context, &geometry);
         let model = Gm::new(Mesh::new(&context, &geometry.into()), model_material);
 
 

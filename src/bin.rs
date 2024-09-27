@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use mlua::prelude::*;
 
-use feather::{App, Geometry2D, Geometry3D};
+use feather::*;
 
 
 enum Geometry {

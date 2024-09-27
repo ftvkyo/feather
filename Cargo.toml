@@ -12,10 +12,11 @@ name = "feather-bin"
 path = "src/bin.rs"
 
 [dependencies]
+anyhow = "1.0.89"
 byteorder = "1.5.0"
 cgmath = "0.18.0"
 clap = { version = "4.5.11", features = ["derive"] }
-geo = { version = "0.28.0", features = ["spade"], default-features = false }
 hexasphere = "14.0.0"
 mlua = { version = "0.9.9", features = ["lua54", "vendored"] }
+spade = "2.12.1"
 three-d = "0.17.0"

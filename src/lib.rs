@@ -1,7 +1,8 @@
+mod export;
+mod geometry;
+mod render;
+
 mod app;
-mod shape;
-mod view;
-mod wireframe;
 
 pub use app::App;
-pub use shape::*;
+pub use geometry::{Geometry2D, Geometry3D};

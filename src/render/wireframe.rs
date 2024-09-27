@@ -3,7 +3,7 @@
 
 use three_d::*;
 
-use crate::Geometry3D;
+use crate::geometry::{AsPrimitives, Geometry3D, P3};
 
 pub type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
 
@@ -39,25 +39,11 @@ pub fn generate_wireframe(context: &Context, geometry: &Geometry3D) -> (Wirefram
 }
 
 fn edge_transformations(geometry: &Geometry3D) -> Instances {
-    let positions = &geometry.positions;
-    let indices = &geometry.indices;
-
     let mut transformations = Vec::new();
 
-    for f in 0..indices.len() / 3 {
-        let i1 = indices[3 * f] as usize;
-        let i2 = indices[3 * f + 1] as usize;
-        let i3 = indices[3 * f + 2] as usize;
-
-        if i1 < i2 {
-            transformations.push(edge_transform(positions[i1], positions[i2]));
-        }
-        if i2 < i3 {
-            transformations.push(edge_transform(positions[i2], positions[i3]));
-        }
-        if i3 < i1 {
-            transformations.push(edge_transform(positions[i3], positions[i1]));
-        }
+    let edges = geometry.as_manifold_edges();
+    for [v0, v1] in edges {
+        transformations.push(edge_transform(v0, v1));
     }
 
     Instances {
@@ -66,9 +52,9 @@ fn edge_transformations(geometry: &Geometry3D) -> Instances {
     }
 }
 
-fn edge_transform(p1: Vector3<f64>, p2: Vector3<f64>) -> Mat4 {
-    let p1 = p1.cast().unwrap();
-    let p2 = p2.cast().unwrap();
+fn edge_transform(p1: P3, p2: P3) -> Mat4 {
+    let p1 = p1.to_vec().cast().unwrap();
+    let p2 = p2.to_vec().cast().unwrap();
 
     Mat4::from_translation(p1)
         * Into::<Mat4>::into(Quat::from_arc(
@@ -82,9 +68,9 @@ fn edge_transform(p1: Vector3<f64>, p2: Vector3<f64>) -> Mat4 {
 fn vertex_transformations(geometry: &Geometry3D) -> Instances {
     Instances {
         transformations: geometry
-            .positions
+            .as_vertices()
             .iter()
-            .map(|v| v.cast::<f32>().unwrap())
+            .map(|v| v.to_vec().cast::<f32>().unwrap())
             .map(Matrix4::from_translation)
             .collect(),
         ..Default::default()
