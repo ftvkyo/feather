@@ -96,7 +96,7 @@ impl View {
             camera_up,
             degrees(60.0),
             0.1,
-            10.0,
+            f32::MAX / 2.0,
         );
         let mut control = OrbitControl::new(camera_target, 1.0, 10.0);
 
