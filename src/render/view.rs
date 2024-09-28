@@ -2,7 +2,7 @@ use three_d::*;
 
 use crate::geometry::{AsPrimitives, Geometry3D};
 
-use super::wireframe::generate_wireframe;
+use super::{interface::generate_axes, wireframe::generate_wireframe};
 
 impl Into<CpuMesh> for Geometry3D {
     fn into(self) -> CpuMesh {
@@ -165,6 +165,7 @@ impl View {
         );
         model_material.render_states.cull = Cull::Back;
 
+        let axes = generate_axes(&context, 100.0);
         let (edges, vertices) = generate_wireframe(&context, &geometry);
         let model = Gm::new(Mesh::new(&context, &geometry.into()), model_material);
 
@@ -184,19 +185,18 @@ impl View {
             if redraw {
                 lights.update(&context, camera_target - camera.position());
 
-                if !state.render_wireframe {
-                    frame_input.screen().clear(clear_state).render(
-                        &camera,
-                        &model,
-                        &[&lights.ambient, &lights.r, &lights.g, &lights.b],
-                    );
-                } else {
-                    frame_input.screen().clear(clear_state).render(
-                        &camera,
-                        model.into_iter().chain(&edges).chain(&vertices),
-                        &[&lights.ambient, &lights.r, &lights.g, &lights.b],
-                    );
+                let mut objects: Vec<&dyn Object> = vec![&model, &axes];
+
+                if state.render_wireframe {
+                    objects.push(&edges);
+                    objects.push(&vertices);
                 }
+
+                frame_input.screen().clear(clear_state).render(
+                    &camera,
+                    &objects,
+                    &[&lights.ambient, &lights.r, &lights.g, &lights.b],
+                );
             }
 
             FrameOutput {
