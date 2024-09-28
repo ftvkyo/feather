@@ -6,7 +6,7 @@ pub fn generate_axes(context: &Context, height: f32) -> Axes {
     let mut axis_material = PhysicalMaterial::new_opaque(
         &context,
         &CpuMaterial {
-            albedo: Srgba::new_opaque(127, 127, 127),
+            albedo: Srgba::new_opaque(200, 200, 200),
             ..Default::default()
         },
     );
@@ -24,6 +24,11 @@ pub fn generate_axes(context: &Context, height: f32) -> Axes {
 
     let instances = Instances {
         transformations: vec![x, y, z],
+        colors: Some(vec![
+            Srgba::RED,
+            Srgba::GREEN,
+            Srgba::BLUE,
+        ]),
         ..Default::default()
     };
 
