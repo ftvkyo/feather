@@ -56,6 +56,49 @@ impl Default for ViewState {
     }
 }
 
+pub struct Lights {
+    spread: Rad<f32>,
+    strength: f32,
+
+    ambient: AmbientLight,
+    r: DirectionalLight,
+    g: DirectionalLight,
+    b: DirectionalLight,
+}
+
+impl Lights {
+    pub fn new(context: &Context, direction: Vector3<f32>, strength: f32, spread: Rad<f32>) -> Self {
+        // To put the first light into the required position
+        let rot1 = Matrix4::from_angle_z(spread);
+        // To put the next lights relative to the previous lights
+        let rot2 = Matrix4::from_axis_angle(direction, Rad::full_turn() / 3.0);
+
+        let vr = rot1.transform_vector(direction);
+        let vg = rot2.transform_vector(vr.clone());
+        let vb = rot2.transform_vector(vg.clone());
+
+        let r = DirectionalLight::new(&context, strength, Srgba::RED, &vr);
+        let g = DirectionalLight::new(&context, strength, Srgba::GREEN, &vg);
+        let b = DirectionalLight::new(&context, strength, Srgba::BLUE, &vb);
+
+        let ambient = AmbientLight::new(&context, 0.1, Srgba::WHITE);
+
+        Self {
+            strength,
+            spread,
+
+            ambient,
+            r,
+            g,
+            b,
+        }
+    }
+
+    pub fn update(&mut self, context: &Context, direction: Vector3<f32>) {
+        *self = Self::new(context, direction, self.strength, self.spread);
+    }
+}
+
 pub struct View {
     window: Window,
     state: ViewState,
@@ -100,15 +143,12 @@ impl View {
         );
         let mut control = OrbitControl::new(camera_target, 1.0, 10.0);
 
-        let light_ambient = AmbientLight::new(&context, 0.01, Srgba::WHITE);
-        let mut light_camera = DirectionalLight::new(&context, 0.5, Srgba::WHITE, &(camera_target - camera_position));
+        let mut lights = Lights::new(&context, camera_target - camera_position, 0.5, Deg(45.0).into());
 
         let mut model_material = PhysicalMaterial::new_opaque(
             &context,
             &CpuMaterial {
-                albedo: Srgba::new_opaque(255, 255, 255),
-                metallic: 0.25,
-                roughness: 0.25,
+                albedo: Srgba::WHITE,
                 ..Default::default()
             },
         );
@@ -131,19 +171,19 @@ impl View {
             redraw |= state.handle_events(&mut frame_input.events);
 
             if redraw {
-                light_camera.direction = camera_target - camera.position();
+                lights.update(&context, camera_target - camera.position());
 
                 if !state.render_wireframe {
                     frame_input.screen().clear(clear_state).render(
                         &camera,
                         &model,
-                        &[&light_ambient, &light_camera],
+                        &[&lights.ambient, &lights.r, &lights.g, &lights.b],
                     );
                 } else {
                     frame_input.screen().clear(clear_state).render(
                         &camera,
                         model.into_iter().chain(&edges).chain(&vertices),
-                        &[&light_ambient, &light_camera],
+                        &[&lights.ambient, &lights.r, &lights.g, &lights.b],
                     );
                 }
             }
