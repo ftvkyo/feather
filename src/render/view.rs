@@ -24,6 +24,7 @@ impl Into<CpuMesh> for Geometry3D {
 }
 
 struct ViewState {
+    pub should_exit: bool,
     pub render_wireframe: bool,
 }
 
@@ -32,6 +33,15 @@ impl ViewState {
         let mut change = false;
         for event in events.iter_mut() {
             match event {
+                Event::KeyPress {
+                    kind: Key::Q,
+                    handled,
+                    ..
+                } => {
+                    self.should_exit = true;
+                    *handled = true;
+                    change = true;
+                }
                 Event::KeyPress {
                     kind: Key::D,
                     handled,
@@ -52,6 +62,7 @@ impl Default for ViewState {
     fn default() -> Self {
         Self {
             render_wireframe: false,
+            should_exit: false,
         }
     }
 }
@@ -190,6 +201,7 @@ impl View {
 
             FrameOutput {
                 swap_buffers: redraw,
+                exit: state.should_exit,
                 ..Default::default()
             }
         });
