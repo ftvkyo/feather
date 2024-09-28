@@ -1,7 +1,7 @@
 use three_d::*;
 use three_d_asset::ProjectionType;
 
-use crate::geometry::{AsPrimitives, Geometry3D};
+use crate::geometry::{AsPrimitives, Geometry3D, Geometry2D};
 
 use super::{interface::generate_axes, wireframe::generate_wireframe};
 
@@ -29,6 +29,13 @@ impl Into<CpuMesh> for Geometry3D {
         mesh.compute_normals();
 
         mesh
+    }
+}
+
+impl Into<CpuMesh> for Geometry2D {
+    fn into(self) -> CpuMesh {
+        let g3 = self.extrude_linear(0.1);
+        g3.into()
     }
 }
 

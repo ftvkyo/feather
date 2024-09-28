@@ -15,6 +15,6 @@ fn main() {
 
     let g3 = g2.extrude_linear(1.0);
 
-    let view = View::new("complex_extrusion");
+    let view = View::new("disjointed_extrusion");
     view.run(g3);
 }

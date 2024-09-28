@@ -1,3 +1,5 @@
+use cgmath::{ElementWise, EuclideanSpace, Matrix2, Rad};
+
 pub mod boolean;
 pub mod extrude;
 
@@ -11,6 +13,8 @@ const EPSILON: FP = 0.000_000_1;
 pub struct Triangles<Point: Clone + std::fmt::Debug>(pub Vec<[Point; 3]>);
 
 pub trait AsPrimitives<Point: Clone + std::fmt::Debug> {
+    fn from_primitives(vertices: Vec<Point>, triangles: Vec<[usize; 3]>) -> Self;
+
     fn get_vertices(&self) -> &Vec<Point>;
     fn get_triangles(&self) -> &Vec<[usize; 3]>;
 
@@ -73,6 +77,63 @@ pub trait AsPrimitives<Point: Clone + std::fmt::Debug> {
     }
 }
 
+pub trait Geometry<V, R> {
+    fn concat(&self, other: &Self) -> Self;
+    fn translate(&self, v: V) -> Self;
+    fn scale(&self, v: V) -> Self;
+    fn rotate(&self, v: R) -> Self;
+}
+
+impl<T: AsPrimitives<P2> + Clone> Geometry<V2, Rad<FP>> for T {
+    // TODO: Make transformations happen using matrices
+    // (maybe this would allow generalising rotation between 2D and 3D shapes?)
+
+    fn concat(&self, other: &Self) -> Self {
+        let mut vs = self.get_vertices().clone();
+        let vsn = vs.len();
+
+        vs.extend(other.get_vertices().clone());
+
+        let mut ts = self.get_triangles().clone();
+
+        for [t0, t1, t2] in other.get_triangles() {
+            ts.push([t0 + vsn, t1 + vsn, t2 + vsn]);
+        }
+
+        Self::from_primitives(vs, ts)
+    }
+
+    fn translate(&self, v: V2) -> Self {
+        let p = P2::from_vec(v);
+        let mut vs = self.get_vertices().clone();
+        for vertex in &mut vs {
+            vertex.add_assign_element_wise(p);
+        }
+        Self::from_primitives(vs, self.get_triangles().clone())
+    }
+
+    fn scale(&self, v: V2) -> Self {
+        // FIXME: with negative scalings, triangle winding needs to be corrected
+
+        let p = P2::from_vec(v);
+        let mut vs = self.get_vertices().clone();
+        for vertex in &mut vs {
+            vertex.mul_assign_element_wise(p);
+        }
+        Self::from_primitives(vs, self.get_triangles().clone())
+    }
+
+    fn rotate(&self, v: Rad<FP>) -> Self {
+        let rot = Matrix2::from_angle(v);
+
+        let mut vs = self.get_vertices().clone();
+        for vertex in &mut vs {
+            *vertex = P2::from_vec(rot * vertex.to_vec());
+        }
+        Self::from_primitives(vs, self.get_triangles().clone())
+    }
+}
+
 /* ========= *
  * 2D points *
  * ========= */
@@ -126,6 +187,13 @@ pub struct Geometry2D {
 }
 
 impl AsPrimitives<P2> for Geometry2D {
+    fn from_primitives(vertices: Vec<P2>, triangles: Vec<[usize; 3]>) -> Self {
+        Self {
+            vertices,
+            triangles,
+        }
+    }
+
     fn get_vertices(&self) -> &Vec<P2> {
         &self.vertices
     }
@@ -218,6 +286,13 @@ pub struct Geometry3D {
 }
 
 impl AsPrimitives<P3> for Geometry3D {
+    fn from_primitives(vertices: Vec<P3>, triangles: Vec<[usize; 3]>) -> Self {
+        Self {
+            vertices,
+            triangles,
+        }
+    }
+
     fn get_vertices(&self) -> &Vec<P3> {
         &self.vertices
     }
