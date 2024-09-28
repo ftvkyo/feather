@@ -1,8 +1,17 @@
 use three_d::*;
+use three_d_asset::ProjectionType;
 
 use crate::geometry::{AsPrimitives, Geometry3D};
 
 use super::{interface::generate_axes, wireframe::generate_wireframe};
+
+
+const DEFAULT_FOV: Deg<f32> = Deg(60.0);
+const DEFAULT_DISTANCE: f32 = 5.0;
+const DEFAULT_Z_NEAR: f32 = 0.1;
+// Setting this to f32::MAX / 2.0 breaks depth buffer for orthographic projection :)
+const DEFAULT_Z_FAR: f32 = 100.0;
+
 
 impl Into<CpuMesh> for Geometry3D {
     fn into(self) -> CpuMesh {
@@ -29,7 +38,7 @@ struct ViewState {
 }
 
 impl ViewState {
-    pub fn handle_events(&mut self, events: &mut [Event]) -> bool {
+    pub fn handle_events(&mut self, camera: &mut Camera, events: &mut [Event]) -> bool {
         let mut change = false;
         for event in events.iter_mut() {
             match event {
@@ -51,6 +60,24 @@ impl ViewState {
                     *handled = true;
                     change = true;
                 }
+                Event::KeyPress {
+                    kind: Key::P,
+                    handled,
+                    ..
+                } => {
+                    match camera.projection_type() {
+                        ProjectionType::Orthographic { .. } => {
+                            camera.set_perspective_projection(DEFAULT_FOV, DEFAULT_Z_NEAR, DEFAULT_Z_FAR);
+                        }
+                        ProjectionType::Perspective { .. } => {
+                            let height = camera.position().magnitude();
+                            camera.set_orthographic_projection(height, DEFAULT_Z_NEAR, DEFAULT_Z_FAR);
+                        }
+                    }
+
+                    *handled = true;
+                    change = true;
+                }
                 _ => {}
             }
         }
@@ -61,8 +88,8 @@ impl ViewState {
 impl Default for ViewState {
     fn default() -> Self {
         Self {
-            render_wireframe: false,
             should_exit: false,
+            render_wireframe: false,
         }
     }
 }
@@ -130,10 +157,9 @@ impl View {
     }
 
     pub fn run(self, geometry: Geometry3D) {
-        let clear_state = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 100.0);
+        let clear_state = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 1.0);
 
-        let camera_distance = 3.0;
-        let camera_position = vec3(camera_distance, 0.0, 0.0);
+        let camera_position = vec3(DEFAULT_DISTANCE, 0.0, 0.0);
         let camera_target = vec3(0.0, 0.0, 0.0);
         let camera_up = vec3(0.0, 1.0, 0.0);
 
@@ -143,27 +169,21 @@ impl View {
 
         let context = self.window.gl();
 
-        let mut camera = Camera::new_perspective(
+        let mut camera = Camera::new_orthographic(
             self.window.viewport(),
             camera_position,
             camera_target,
             camera_up,
-            degrees(60.0),
-            0.1,
-            f32::MAX / 2.0,
+            DEFAULT_DISTANCE,
+            DEFAULT_Z_NEAR,
+            DEFAULT_Z_FAR,
         );
+
         let mut control = OrbitControl::new(camera_target, 1.0, 10.0);
 
         let mut lights = Lights::new(&context, camera_target - camera_position, 0.5, Deg(45.0).into());
 
-        let mut model_material = PhysicalMaterial::new_opaque(
-            &context,
-            &CpuMaterial {
-                albedo: Srgba::WHITE,
-                ..Default::default()
-            },
-        );
-        model_material.render_states.cull = Cull::Back;
+        let model_material = super::material(&context, Srgba::WHITE);
 
         let axes = generate_axes(&context, 100.0);
         let (edges, vertices) = generate_wireframe(&context, &geometry);
@@ -180,7 +200,7 @@ impl View {
             let mut redraw = frame_input.first_frame;
             redraw |= camera.set_viewport(frame_input.viewport);
             redraw |= control.handle_events(&mut camera, &mut frame_input.events);
-            redraw |= state.handle_events(&mut frame_input.events);
+            redraw |= state.handle_events(&mut camera, &mut frame_input.events);
 
             if redraw {
                 lights.update(&context, camera_target - camera.position());

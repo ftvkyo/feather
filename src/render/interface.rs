@@ -3,14 +3,7 @@ use three_d::*;
 pub type Axes = Gm<InstancedMesh, PhysicalMaterial>;
 
 pub fn generate_axes(context: &Context, height: f32) -> Axes {
-    let mut axis_material = PhysicalMaterial::new_opaque(
-        &context,
-        &CpuMaterial {
-            albedo: Srgba::new_opaque(200, 200, 200),
-            ..Default::default()
-        },
-    );
-    axis_material.render_states.cull = Cull::Back;
+    let material = super::material(context, Srgba::new_opaque(200, 200, 200));
 
     let scale = 0.005;
 
@@ -34,7 +27,7 @@ pub fn generate_axes(context: &Context, height: f32) -> Axes {
 
     let axes = Gm::new(
         InstancedMesh::new(&context, &instances, &base),
-        axis_material,
+        material,
     );
 
     axes

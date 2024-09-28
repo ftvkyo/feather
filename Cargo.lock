@@ -442,6 +442,7 @@ dependencies = [
  "mlua",
  "spade",
  "three-d",
+ "three-d-asset",
 ]
 
 [[package]]

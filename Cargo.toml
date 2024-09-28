@@ -20,3 +20,4 @@ hexasphere = "14.0.0"
 mlua = { version = "0.9.9", features = ["lua54", "vendored"] }
 spade = "2.12.1"
 three-d = "0.17.0"
+three-d-asset = "0.7.0"

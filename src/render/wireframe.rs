@@ -8,14 +8,7 @@ use crate::geometry::{AsPrimitives, Geometry3D, P3};
 pub type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
 
 pub fn generate_wireframe(context: &Context, geometry: &Geometry3D) -> (Wireframe, Wireframe) {
-    let mut wireframe_material = PhysicalMaterial::new_opaque(
-        &context,
-        &CpuMaterial {
-            albedo: Srgba::new_opaque(220, 50, 50),
-            ..Default::default()
-        },
-    );
-    wireframe_material.render_states.cull = Cull::Back;
+    let material = super::material(context, Srgba::new_opaque(200, 200, 100));
 
     let scale = 0.007;
 
@@ -25,14 +18,14 @@ pub fn generate_wireframe(context: &Context, geometry: &Geometry3D) -> (Wirefram
         .unwrap();
     let edges = Gm::new(
         InstancedMesh::new(&context, &edge_transformations(&geometry), &cylinder),
-        wireframe_material.clone(),
+        material.clone(),
     );
 
     let mut sphere = CpuMesh::sphere(8);
     sphere.transform(&Mat4::from_scale(scale)).unwrap();
     let vertices = Gm::new(
         InstancedMesh::new(&context, &vertex_transformations(&geometry), &sphere),
-        wireframe_material,
+        material,
     );
 
     (edges, vertices)
