@@ -1,2 +1,3 @@
 s = sphere(1)
-output(s)
+
+app:output(s)

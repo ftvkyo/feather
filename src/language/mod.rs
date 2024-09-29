@@ -1,13 +1,54 @@
-use std::sync::{Arc, RwLock};
-
-use mlua::prelude::*;
+use mlua::{prelude::*, UserData};
 
 use crate::prelude::*;
 
 
-enum Geometry {
-    G2D(Geometry2D),
-    G3D(Geometry3D),
+impl UserData for App {
+    fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(ms: &mut M) {
+        ms.add_method("output", |_, this, geometry: Geometry3D| {
+            Ok(this.run(geometry))
+        });
+    }
+}
+
+
+impl UserData for Geometry2D {
+    fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(ms: &mut M) {
+        ms.add_method("extrude_linear", |_, this, extent: f64| {
+            Ok(this.extrude_linear(extent))
+        });
+    }
+}
+
+impl<'lua> FromLua<'lua> for Geometry2D {
+    fn from_lua(value: LuaValue<'lua>, _: &'lua Lua) -> LuaResult<Self> {
+        match value {
+            LuaValue::UserData(ud) => {
+                return ud.take();
+            }
+            _ => {
+                Err(LuaError::RuntimeError(format!("value is not userdata")))
+            }
+        }
+    }
+}
+
+
+impl UserData for Geometry3D {
+
+}
+
+impl<'lua> FromLua<'lua> for Geometry3D {
+    fn from_lua(value: LuaValue<'lua>, _: &'lua Lua) -> LuaResult<Self> {
+        match value {
+            LuaValue::UserData(ud) => {
+                return ud.take();
+            }
+            _ => {
+                Err(LuaError::RuntimeError(format!("value is not userdata")))
+            }
+        }
+    }
 }
 
 
@@ -15,59 +56,13 @@ pub fn lua(app: App) -> LuaResult<()> {
     let lua = Lua::new();
     let source = std::fs::read_to_string(&app.args.file).expect("Can't read that file :(");
 
-    let storage: Arc<RwLock<Vec<Geometry>>> = Arc::new(RwLock::new(Vec::new()));
+    lua.globals().set("app", app)?;
 
-    let f_circle = {
-        let storage = storage.clone();
-        lua.create_function(move |_, sides| {
-            let g = Geometry2D::circle(sides);
-            let mut storage = storage.write().unwrap();
-            storage.push(Geometry::G2D(g));
-            Ok(storage.len() - 1)
-        }).unwrap()
-    };
-
-    let f_sphere = {
-        let storage = storage.clone();
-        lua.create_function(move |_, subdivisions| {
-            let g = Geometry3D::sphere(subdivisions);
-            let mut storage = storage.write().unwrap();
-            storage.push(Geometry::G3D(g));
-            Ok(storage.len() - 1)
-        }).unwrap()
-    };
-
-    let f_extrude_linear = {
-        let storage = storage.clone();
-        lua.create_function(move |_, (object, extent): (usize, f64)| {
-            let mut storage = storage.write().unwrap();
-            if let Geometry::G2D(geometry) = &storage[object] {
-                let extruded = geometry.extrude_linear(extent);
-                storage.push(Geometry::G3D(extruded));
-                Ok(storage.len() - 1)
-            } else {
-                Err(LuaError::external("Can't extrude a 3D object"))
-            }
-        }).unwrap()
-    };
-
-    let f_output = {
-        let storage = storage.clone();
-        lua.create_function(move |_, object: usize| {
-            let storage = storage.read().unwrap();
-            if let Geometry::G3D(geometry) = &storage[object] {
-                app.run(geometry.clone());
-                Ok(())
-            } else {
-                Err(LuaError::external("Can't export/display a 2D object"))
-            }
-        }).unwrap()
-    };
+    let f_circle = lua.create_function(|_, sides| Ok(Geometry2D::circle(sides)))?;
+    let f_sphere = lua.create_function(|_, subdivisions| Ok(Geometry3D::sphere(subdivisions)))?;
 
     lua.globals().set("circle", f_circle)?;
     lua.globals().set("sphere", f_sphere)?;
-    lua.globals().set("extrude_linear", f_extrude_linear)?;
-    lua.globals().set("output", f_output)?;
 
     lua.load(source).exec()?;
 
