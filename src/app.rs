@@ -2,7 +2,7 @@ use std::{fs::OpenOptions, path::PathBuf};
 
 use clap::{Parser, ValueEnum};
 
-use crate::{geometry::{primitives::AsPrimitives, Geometry3D}, render::view::View};
+use crate::{geometry::{primitives::Triangles, Geometry3D}, render::view::View};
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum AppMode {
@@ -58,7 +58,7 @@ impl App {
                     .open(output_path)
                     .unwrap();
 
-                geometry.as_triangles().stl(&mut file).unwrap();
+                Triangles::new(geometry.iter_triangles().collect()).stl(&mut file).unwrap();
             }
         }
     }

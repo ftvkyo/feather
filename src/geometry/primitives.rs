@@ -36,6 +36,16 @@ impl<Point: Clone + std::fmt::Debug> std::ops::IndexMut<usize> for Triangle<Poin
     }
 }
 
+impl<Point: Clone + std::fmt::Debug> IntoIterator for Triangle<Point> {
+    type Item = Point;
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.to_vec().into_iter()
+    }
+}
+
 impl<Point: Clone + std::fmt::Debug> Triangle<Point> {
     // TODO: check that area is non-zero
 
@@ -74,6 +84,16 @@ impl<Point: Clone + std::fmt::Debug> std::ops::IndexMut<usize> for Triangles<Poi
     }
 }
 
+impl<Point: Clone + std::fmt::Debug> IntoIterator for Triangles<Point> {
+    type Item = Triangle<Point>;
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 impl<Point: Clone + std::fmt::Debug> Triangles<Point> {
     pub fn new(triangles: Vec<Triangle<Point>>) -> Self {
         Self(triangles)
@@ -104,70 +124,5 @@ impl TryFrom<Outline2D> for Triangles<P2> {
             .collect();
 
         Ok(Self(triangles))
-    }
-}
-
-pub trait AsPrimitives<Point: Clone + std::fmt::Debug> {
-    fn from_primitives(vertices: Vec<Point>, triangles: Vec<[usize; 3]>) -> Self;
-
-    fn get_vertices(&self) -> &Vec<Point>;
-    fn get_triangles(&self) -> &Vec<[usize; 3]>;
-
-    fn as_vertices(&self) -> Vec<Point> {
-        let vs = self.get_vertices();
-        let ts = self.get_triangles();
-
-        let mut vertices = vec![];
-
-        for [t0, t1, t2] in ts {
-            vertices.push(vs[*t0].clone());
-            vertices.push(vs[*t1].clone());
-            vertices.push(vs[*t2].clone());
-        }
-
-        vertices
-    }
-
-    fn as_triangles(&self) -> Triangles<Point> {
-        let vs = self.get_vertices();
-        let ts = self.get_triangles();
-
-        let mut triangles = vec![];
-
-        for [t0, t1, t2] in ts {
-            triangles.push(Triangle::from_points([
-                vs[*t0].clone(),
-                vs[*t1].clone(),
-                vs[*t2].clone(),
-            ]));
-        }
-
-        Triangles::new(triangles)
-    }
-
-    /// Returns edges that are used by an odd number of triangles.
-    /// For 2D objects, this is their outlines and holes.
-    /// For 3D objects, this is what would make them non-manifold.
-    fn as_outer_edge_indices(&self) -> Vec<[usize; 2]> {
-        use std::collections::BTreeSet;
-
-        let ts = self.get_triangles();
-
-        let mut edges: BTreeSet<[usize; 2]> = BTreeSet::new();
-
-        for [t0, t1, t2] in ts {
-            for [a, b] in [[t0, t1], [t1, t2], [t2, t0]] {
-                if edges.contains(&[*a, *b]) || edges.contains(&[*b, *a]) {
-                    edges.remove(&[*a, *b]);
-                    edges.remove(&[*b, *a]);
-                } else {
-                    edges.insert([*a, *b]);
-                }
-            }
-        }
-
-        // TODO: differentiate the outline and holes
-
-        edges.into_iter().collect()
     }
 }

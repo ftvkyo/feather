@@ -3,7 +3,7 @@
 
 use three_d::*;
 
-use crate::geometry::{primitives::{AsPrimitives, P3}, Geometry3D};
+use crate::geometry::{primitives::P3, Geometry3D};
 
 pub type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
 
@@ -61,8 +61,7 @@ fn edge_transform(p1: P3, p2: P3) -> Mat4 {
 fn vertex_transformations(geometry: &Geometry3D) -> Instances {
     Instances {
         transformations: geometry
-            .as_vertices()
-            .iter()
+            .iter_vertices()
             .map(|v| v.to_vec().cast::<f32>().unwrap())
             .map(Matrix4::from_translation)
             .collect(),

@@ -1,6 +1,6 @@
 use crate::geometry::P3;
 
-use super::{AsPrimitives, Geometry2D, Geometry3D, FP};
+use super::{Geometry2D, Geometry3D, FP};
 
 impl Geometry2D {
     pub fn extrude_linear(&self, extent: FP) -> Geometry3D {
@@ -34,7 +34,7 @@ impl Geometry2D {
         }
 
         // Add side faces
-        for [e0, e1] in self.as_outer_edge_indices() {
+        for [e0, e1] in self.outer_edge_indices() {
             // Top triangle
             triangles.push([e0, e0 + vs, e1]);
             // Bottom triangle

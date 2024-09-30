@@ -1,7 +1,7 @@
 use three_d::*;
 use three_d_asset::ProjectionType;
 
-use crate::geometry::{primitives::AsPrimitives, Geometry2D, Geometry3D};
+use crate::geometry::{Geometry2D, Geometry3D};
 
 use super::{interface::generate_axes, wireframe::generate_wireframe};
 
@@ -18,8 +18,7 @@ impl Into<CpuMesh> for Geometry3D {
         // `vertices` and `triangles` could just be copied, however, the three-d crate doesn't support flat rendering.
         // So, to achieve flat rendering, there is no index buffer used.
 
-        let vertices = self.as_vertices();
-        let vertices = vertices.into_iter().map(Point3::to_vec).collect();
+        let vertices = self.iter_vertices().map(Point3::to_vec).collect();
 
         let mut mesh = CpuMesh {
             positions: Positions::F64(vertices),
