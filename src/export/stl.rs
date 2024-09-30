@@ -1,7 +1,7 @@
 use std::io::{BufWriter, Write};
 use byteorder::{LittleEndian, WriteBytesExt};
 
-use crate::geometry::{Triangles, P3};
+use crate::geometry::primitives::{Triangles, P3};
 
 impl Triangles<P3> {
     pub fn stl<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
@@ -11,10 +11,10 @@ impl Triangles<P3> {
         writer.write_all(&[0u8; 80])?;
 
         // Write 4-byte number of triangles
-        writer.write_u32::<LittleEndian>(self.0.len() as u32)?;
+        writer.write_u32::<LittleEndian>(self.iter().len() as u32)?;
 
         // For each triangle
-        for triangle in &self.0 {
+        for triangle in self.iter() {
             // Calculate normal
             let a = triangle[1] - triangle[0];
             let b = triangle[2] - triangle[0];
@@ -26,7 +26,7 @@ impl Triangles<P3> {
             writer.write_f32::<LittleEndian>(normal.z as f32)?;
 
             // For each point in the triangle
-            for vertex in triangle {
+            for vertex in triangle.iter() {
                 // Write 3 x 4-byte point
                 writer.write_f32::<LittleEndian>(vertex.x as f32)?;
                 writer.write_f32::<LittleEndian>(vertex.y as f32)?;

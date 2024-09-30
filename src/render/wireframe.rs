@@ -3,7 +3,7 @@
 
 use three_d::*;
 
-use crate::geometry::{AsPrimitives, Geometry3D, P3};
+use crate::geometry::{primitives::{AsPrimitives, P3}, Geometry3D};
 
 pub type Wireframe = Gm<InstancedMesh, PhysicalMaterial>;
 

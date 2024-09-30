@@ -2,7 +2,7 @@ use std::{fs::OpenOptions, path::PathBuf};
 
 use clap::{Parser, ValueEnum};
 
-use crate::{geometry::{AsPrimitives, Geometry3D}, render::view::View};
+use crate::{geometry::{primitives::AsPrimitives, Geometry3D}, render::view::View};
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum AppMode {

@@ -1,81 +1,10 @@
-use cgmath::{ElementWise, EuclideanSpace, Matrix2, Rad};
-
+pub mod primitives;
 pub mod boolean;
 pub mod extrude;
 
-/// Used floating point type
-type FP = f64;
-/// Comparison of floats
-const EPSILON: FP = 0.000_000_1;
+use cgmath::{ElementWise, EuclideanSpace, Matrix2, Rad};
+use primitives::*;
 
-
-#[derive(Clone, Debug)]
-pub struct Triangles<Point: Clone + std::fmt::Debug>(pub Vec<[Point; 3]>);
-
-pub trait AsPrimitives<Point: Clone + std::fmt::Debug> {
-    fn from_primitives(vertices: Vec<Point>, triangles: Vec<[usize; 3]>) -> Self;
-
-    fn get_vertices(&self) -> &Vec<Point>;
-    fn get_triangles(&self) -> &Vec<[usize; 3]>;
-
-    fn as_vertices(&self) -> Vec<Point> {
-        let vs = self.get_vertices();
-        let ts = self.get_triangles();
-
-        let mut vertices = vec![];
-
-        for [t0, t1, t2] in ts {
-            vertices.push(vs[*t0].clone());
-            vertices.push(vs[*t1].clone());
-            vertices.push(vs[*t2].clone());
-        }
-
-        vertices
-    }
-
-    fn as_triangles(&self) -> Triangles<Point> {
-        let vs = self.get_vertices();
-        let ts = self.get_triangles();
-
-        let mut triangles = vec![];
-
-        for [t0, t1, t2] in ts {
-            triangles.push([
-                vs[*t0].clone(),
-                vs[*t1].clone(),
-                vs[*t2].clone(),
-            ]);
-        }
-
-        Triangles(triangles)
-    }
-
-    /// Returns edges that are used by an odd number of triangles.
-    /// For 2D objects, this is their outlines and holes.
-    /// For 3D objects, this is what would make them non-manifold.
-    fn as_outer_edge_indices(&self) -> Vec<[usize; 2]> {
-        use std::collections::BTreeSet;
-
-        let ts = self.get_triangles();
-
-        let mut edges: BTreeSet<[usize; 2]> = BTreeSet::new();
-
-        for [t0, t1, t2] in ts {
-            for [a, b] in [[t0, t1], [t1, t2], [t2, t0]] {
-                if edges.contains(&[*a, *b]) || edges.contains(&[*b, *a]) {
-                    edges.remove(&[*a, *b]);
-                    edges.remove(&[*b, *a]);
-                } else {
-                    edges.insert([*a, *b]);
-                }
-            }
-        }
-
-        // TODO: differentiate the outline and holes
-
-        edges.into_iter().collect()
-    }
-}
 
 pub trait Geometry<V, R> {
     fn concat(&self, other: &Self) -> Self;
@@ -134,47 +63,6 @@ impl<T: AsPrimitives<P2> + Clone> Geometry<V2, Rad<FP>> for T {
     }
 }
 
-/* ========= *
- * 2D points *
- * ========= */
-
-pub type P2 = cgmath::Point2<FP>;
-pub type V2 = cgmath::Vector2<FP>;
-
-pub fn spade_from_p2(p: P2) -> spade::Point2<FP> {
-    spade::Point2::new(p.x, p.y)
-}
-
-pub fn spade_to_p2(p: spade::Point2<FP>) -> P2 {
-    P2::new(p.x, p.y)
-}
-
-/* ========= *
- * 2D shapes *
- * ========= */
-
- #[derive(Clone, Debug)]
-pub struct Outline2D(pub Vec<P2>);
-
-impl TryFrom<Outline2D> for Triangles<P2> {
-    type Error = anyhow::Error;
-
-    fn try_from(value: Outline2D) -> Result<Self, Self::Error> {
-        use spade::Triangulation;
-
-        let mut tri = spade::DelaunayTriangulation::<spade::Point2<FP>>::new();
-
-        for point in value.0 {
-            tri.insert(spade_from_p2(point))?;
-        }
-
-        let triangles: Vec<[P2; 3]> = tri.inner_faces()
-            .map(|f| f.vertices().map(|v| spade_to_p2(*v.data())))
-            .collect();
-
-        Ok(Self(triangles))
-    }
-}
 
 /* =========== *
  * 2D geometry *
@@ -234,14 +122,14 @@ impl From<Triangles<P2>> for Geometry2D {
                 cgmath::abs_diff_eq!(v, gv, epsilon = EPSILON)
             );
 
-        for triangle in value.0 {
+        for triangle in value.iter() {
             let mut global_indices = [0usize; 3];
 
-            for (vi, v) in triangle.into_iter().enumerate() {
+            for (vi, v) in triangle.iter().enumerate() {
                 if let Some(global_index) = find_vertex(&vertices, &v) {
                     global_indices[vi] = global_index;
                 } else {
-                    vertices.push(v);
+                    vertices.push(*v);
                     global_indices[vi] = vertices.len() - 1;
                 }
             }
@@ -263,17 +151,6 @@ impl TryFrom<Outline2D> for Geometry2D {
         Ok(Self::from(Triangles::<P2>::try_from(value)?))
     }
 }
-
-/* ========= *
- * 3D points *
- * ========= */
-
-pub type P3 = cgmath::Point3<FP>;
-pub type V3 = cgmath::Vector3<FP>;
-
-/* ========= *
- * 3D shapes *
- * ========= */
 
 /* =========== *
  * 3D geometry *

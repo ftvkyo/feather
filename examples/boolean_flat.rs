@@ -2,7 +2,7 @@ use cgmath::Deg;
 
 use feather::*;
 
-use geometry::{Geometry, Geometry2D, V2};
+use geometry::{Geometry, Geometry2D, primitives::V2};
 use render::view::View;
 
 fn main() {

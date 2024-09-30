@@ -1,7 +1,7 @@
 use three_d::*;
 use three_d_asset::ProjectionType;
 
-use crate::geometry::{AsPrimitives, Geometry3D, Geometry2D};
+use crate::geometry::{primitives::AsPrimitives, Geometry2D, Geometry3D};
 
 use super::{interface::generate_axes, wireframe::generate_wireframe};
 
