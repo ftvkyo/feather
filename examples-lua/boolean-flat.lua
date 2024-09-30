@@ -1,8 +1,8 @@
-c3 = circle(3)
-c3rot = c3:rotate(45):translate({ -2, 1 })
-c12 = circle(12):translate({ 2, 0.5 })
-c12scaled = c12:scale({ 0.25, 0.75 }):translate({ 0, -2 })
+square1 = circle(4):scale({ 2, 2 })
+square2 = square1:translate({ 1, 0 })
 
-all = c3:concat(c3rot):concat(c12):concat(c12scaled)
+-- all = square1:concat(square2)
+
+all = square1:union(square2)
 
 app:output(all:extrude_linear(0.1))

@@ -70,6 +70,14 @@ impl<Point: Clone + std::fmt::Debug> IndexedTriangles<Point> {
         edges.into_iter().collect()
     }
 
+    pub fn outer_edges(&self) -> Vec<[Point; 2]> {
+        let indices = self.outer_edge_indices();
+        let edges = indices.into_iter().map(|[a, b]|
+            [self.vertices[a].clone(), self.vertices[b].clone()]
+        ).collect();
+        edges
+    }
+
     pub fn concat(&self, other: &Self) -> Self {
         let vertices_count = self.vertices.len();
         let vertices: Vec<_> = self.vertices.iter().cloned().chain(other.vertices.iter().cloned()).collect();

@@ -34,6 +34,10 @@ impl UserData for Geometry2D {
         ms.add_method("concat", |_, this, other: Self| {
             Ok(this.concat(&other))
         });
+
+        ms.add_method("union", |_, this, other: Self| {
+            Ok(this.union(&other))
+        });
     }
 }
 

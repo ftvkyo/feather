@@ -31,6 +31,8 @@ pub struct App {
 
 impl App {
     pub fn new<S: ToString>(title: S) -> Self {
+        pretty_env_logger::init();
+
         let args = AppArgs::parse();
 
         Self {
