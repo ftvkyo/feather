@@ -1,3 +1,4 @@
+use cgmath::Deg;
 use mlua::{prelude::*, UserData};
 
 use crate::prelude::*;
@@ -14,8 +15,24 @@ impl UserData for App {
 
 impl UserData for Geometry2D {
     fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(ms: &mut M) {
+        ms.add_method("translate", |_, this, vector: [FP; 2]| {
+            Ok(this.translate(vector.into()))
+        });
+
+        ms.add_method("scale", |_, this, vector: [FP; 2]| {
+            Ok(this.scale(vector.into()))
+        });
+
+        ms.add_method("rotate", |_, this, angle: FP| {
+            Ok(this.rotate(Deg(angle).into()))
+        });
+
         ms.add_method("extrude_linear", |_, this, extent: f64| {
             Ok(this.extrude_linear(extent))
+        });
+
+        ms.add_method("concat", |_, this, other: Self| {
+            Ok(this.concat(&other))
         });
     }
 }

@@ -7,6 +7,6 @@ pub mod render;
 
 pub mod prelude {
     pub use super::app::App;
-    pub use super::geometry::{Geometry2D, Geometry3D};
+    pub use super::geometry::{Geometry2D, Geometry3D, primitives::FP};
     pub use super::language::*;
 }
