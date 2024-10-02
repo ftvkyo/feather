@@ -33,16 +33,36 @@ fn intersection(a: &[P2; 2], b: &[P2; 2]) -> Option<P2> {
 
 impl Geometry2D {
     pub fn union(&self, other: &Self) -> Self {
-        let edges_a = self.outer_edges();
-        let edges_b = other.outer_edges();
+        let mut edges_a = self.outer_edges().into_iter().map(|e| (e, false));
+        let mut edges_b = other.outer_edges().into_iter().map(|e| (e, false));
 
-        for ea in &edges_a {
-            for eb in &edges_b {
-                if let Some(i) = intersection(ea, eb) {
-                    info!("Found an intersection:\n -> {:#?}\n -> {:#?}", ea, eb);
+        let mut edges_res = vec![];
+
+        // Find all intersecting edges
+        // TODO: optimize (AABB + segment tree?)
+        for (ref edge_a, ref mut edge_a_used) in &mut edges_a {
+            for (ref edge_b, ref mut edge_b_used) in &mut edges_b {
+                if let Some(point) = intersection(edge_a, edge_b) {
+                    info!("Found an intersection:\n -> {:#?}\n -> {:#?}", edge_a, edge_b);
+
+                    // FIXME: this should not push edges with length of 0
+                    edges_res.push([edge_a[0], point]);
+                    edges_res.push([point, edge_b[1]]);
+
+                    *edge_a_used = true;
+                    *edge_b_used = true;
                 }
             }
         }
+
+        // Add the edges that haven't been processed
+        for (edge, used) in edges_a.chain(edges_b) {
+            if !used {
+                edges_res.push(edge);
+            }
+        }
+
+        // TODO: Rebuild the outline
 
         // FIXME
         self.concat(other)
