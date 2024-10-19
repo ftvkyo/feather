@@ -165,9 +165,11 @@ impl View {
     pub fn run(self, geometry: Geometry3D) {
         let clear_state = ClearState::color_and_depth(0.0, 0.0, 0.0, 1.0, 1.0);
 
-        let camera_position = vec3(DEFAULT_DISTANCE, 0.0, 0.0);
+        let pos = (DEFAULT_DISTANCE * DEFAULT_DISTANCE / 3.0).sqrt();
+
+        let camera_position = vec3(pos, - pos, pos);
         let camera_target = vec3(0.0, 0.0, 0.0);
-        let camera_up = vec3(0.0, 1.0, 0.0);
+        let camera_up = vec3(0.0, 0.0, 1.0);
 
         /* ============= *
          * Context setup *
