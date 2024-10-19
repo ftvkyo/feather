@@ -38,7 +38,7 @@ impl Geometry2D {
 
         let mut edges_res = vec![];
 
-        // Find all intersecting edges
+        // 1.1. Find all intersecting edges
         // TODO: optimize (AABB + segment tree?)
         for (ref edge_a, ref mut edge_a_used) in &mut edges_a {
             for (ref edge_b, ref mut edge_b_used) in &mut edges_b {
@@ -55,7 +55,7 @@ impl Geometry2D {
             }
         }
 
-        // Add the edges that haven't been processed
+        // 1.2. Add the edges that haven't been processed
         for (edge, used) in edges_a.chain(edges_b) {
             if !used {
                 edges_res.push(edge);

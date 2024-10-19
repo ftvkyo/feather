@@ -104,11 +104,15 @@ impl<Point: Clone + std::fmt::Debug> Triangles<Point> {
     }
 }
 
+// FIXME: this API is not very nice
 #[derive(Clone, Debug)]
 pub struct Outline2D(pub Vec<P2>);
 
 impl TryFrom<Outline2D> for Triangles<P2> {
     type Error = anyhow::Error;
+
+    // FIXME: this does unconstrained Delaunay Triangulation which
+    // means it's only valid for convex polygons.
 
     fn try_from(value: Outline2D) -> Result<Self, Self::Error> {
         use spade::Triangulation;
